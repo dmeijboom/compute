@@ -1,0 +1,18 @@
+{
+  networking: {
+    hostname: 'dmeijboom-linux-dev1'
+  },
+  apt: {
+    packages: [
+      // Core packages
+      'rng-tools', // to make sure that the machine has enough entropy
+      'nfs-common',
+
+      // Terminal tools
+      'jq',
+      'httpie',
+      'autojump',
+      'postgresql-client',
+    ]
+  }
+}
