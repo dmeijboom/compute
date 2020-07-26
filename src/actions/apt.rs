@@ -9,6 +9,8 @@ use super::write_file;
 use crate::config::apt::AptRepository;
 
 async fn run_apt_get(args: &[&str]) -> Result<()> {
+    log::info!("running: apt-get {}", args.join(" "));
+
     let status = Command::new("apt-get")
         .args(args)
         .stdin(Stdio::null())
@@ -93,10 +95,10 @@ pub async fn install_packages(names: &Vec<String>) -> Result<()> {
     update_packages().await?;
 
     println!("installing packages: {}", to_be_installed.join(", "));
-    run_apt_get(&[&["install", "-y", "–-no-install-recommends"][..], &to_be_installed
+    run_apt_get(&[&["install", "--no-install-recommends", "-y"][..], &to_be_installed
         .iter()
         .map(|pkg| pkg.as_str())
-        .collect::<Vec<_>>()[..]
+        .collect::<Vec<_>>()[..],
     ].concat()).await?;
 
     Ok(())

@@ -20,7 +20,9 @@
       'jq',
       'httpie',
       'autojump',
+      'docker.io',
       'postgresql-client',
+      'silversearcher-ag'
     ]
   }
 }
