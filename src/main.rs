@@ -4,6 +4,7 @@ use clap::derive::Clap;
 
 mod opts;
 mod config;
+mod actions;
 mod provisioner;
 
 use config::Config;

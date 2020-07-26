@@ -3,6 +3,14 @@
     hostname: 'dmeijboom-linux-dev1'
   },
   apt: {
+    repositories: [
+      {
+        name: 'google-cloud-sdk',
+        url: 'https://packages.cloud.google.com/apt',
+        keyUrl: 'https://packages.cloud.google.com/apt/doc/apt-key.gpg',
+        distro: 'cloud-sdk',
+      }
+    ],
     packages: [
       // Core packages
       'rng-tools', // to make sure that the machine has enough entropy

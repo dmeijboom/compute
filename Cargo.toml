@@ -9,6 +9,7 @@ edition = "2018"
 [dependencies]
 json5 = "0.2"
 log = "0.4.11"
+reqwest = "0.10"
 crc32fast = "1.2.0"
 pretty_env_logger = "0.4"
 clap = { version = "3.0.0-beta.1" }
