@@ -44,7 +44,7 @@ pub async fn install_app_image_app(app: &App) -> Result<()> {
 
     while let Some(Ok(package)) = packages.next().await {
         if package == package_name {
-            println!("AppImage {} already installed", app.name);
+            println!("no changes found for AppImage: {}@{}", app.name, app.version);
             return Ok(());
         }
     }
