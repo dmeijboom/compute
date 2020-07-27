@@ -1,24 +1,53 @@
+use std::env;
+use std::path::Path;
 use std::process::Stdio;
 use std::env::current_dir;
 use std::io::{Result, Error, ErrorKind};
 
 use tokio::process::Command;
 
-pub async fn run_cmd(cmd_name: &str, args: &[&str], inherit_output: bool, cwd: Option<String>) -> Result<()> {
-    log::info!("running: {} {}", cmd_name, args.join(" "));
+pub struct CmdOpts<'a> {
+    pub name: &'a str,
+    pub privileged: bool,
+    pub args: &'a [&'a str],
+    pub inherit_output: bool,
+    pub cwd: Option<&'a Path>,
+}
 
-    let status = Command::new(cmd_name)
-        .args(args)
+impl<'a> Default for CmdOpts<'a> {
+    fn default() -> Self {
+        Self {
+            name: "",
+            privileged: true,
+            args: &[],
+            inherit_output: false,
+            cwd: None,
+        }
+    }
+}
+
+pub async fn run_cmd(opts: CmdOpts<'_>) -> Result<()> {
+    log::info!("running: {} {}", opts.name, opts.args.join(" "));
+
+    let status = Command::new(opts.name)
+        .uid(match opts.privileged {
+            true => 0,
+            false => env::var("SUDO_UID")
+                .unwrap()
+                .parse()
+                .unwrap(),
+        })
+        .args(opts.args)
         .stdin(Stdio::null())
-        .stdout(match inherit_output {
+        .stdout(match opts.inherit_output {
             true => Stdio::inherit(),
             false => Stdio::null(),
         })
-        .stderr(match inherit_output {
+        .stderr(match opts.inherit_output {
             true => Stdio::inherit(),
             false => Stdio::null(),
         })
-        .current_dir(match cwd {
+        .current_dir(match opts.cwd {
             Some(dirname) => dirname.clone().into(),
             None => current_dir().unwrap(),
         })
@@ -28,7 +57,7 @@ pub async fn run_cmd(cmd_name: &str, args: &[&str], inherit_output: bool, cwd: O
     if !status.success() {
         return Err(Error::new(
             ErrorKind::Other,
-            format!("failed to run {}, status code: {}", cmd_name, status.code().unwrap()),
+            format!("failed to run {}, status code: {}", opts.name, status.code().unwrap()),
         ));
     }
 

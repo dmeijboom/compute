@@ -6,11 +6,16 @@ use tokio::fs::{self, File};
 use tokio::stream::StreamExt;
 use tokio::io::{BufReader, AsyncBufReadExt};
 
-use super::{write_file, run_cmd};
+use super::{write_file, run_cmd, CmdOpts};
 use crate::config::apt::AptRepository;
 
 pub async fn update_packages() -> Result<()> {
-    run_cmd("apt-get", &["update"], true, None).await
+    run_cmd(CmdOpts {
+        name: "apt-get",
+        args: &["update"],
+        inherit_output: true,
+        ..CmdOpts::default()
+    }).await
 }
 
 pub async fn add_repository(repo: &AptRepository) -> Result<()> {
@@ -84,11 +89,16 @@ pub async fn install_packages(names: &Vec<String>) -> Result<()> {
     update_packages().await?;
 
     println!("installing packages: {}", to_be_installed.join(", "));
-    run_cmd("apt-get", &[&["install", "--no-install-recommends", "-y"][..], &to_be_installed
-        .iter()
-        .map(|pkg| pkg.as_str())
-        .collect::<Vec<_>>()[..],
-    ].concat(), true, None).await?;
+    run_cmd(CmdOpts {
+        name: "apt-get",
+        args: &[&["install", "--no-install-recommends", "-y"][..], &to_be_installed
+            .iter()
+            .map(|pkg| pkg.as_str())
+            .collect::<Vec<_>>()[..],
+        ].concat(),
+        inherit_output: true,
+        ..CmdOpts::default()
+    }).await?;
 
     Ok(())
 }
