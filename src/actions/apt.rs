@@ -1,8 +1,11 @@
 use std::process::{Stdio};
 use std::io::{Result, Error, ErrorKind};
 
+use async_stream::stream;
+use tokio::stream::Stream;
 use tokio::fs::{self, File};
 use tokio::process::Command;
+use tokio::stream::StreamExt;
 use tokio::io::{BufReader, AsyncBufReadExt};
 
 use super::write_file;
@@ -58,32 +61,41 @@ pub async fn add_repository(repo: &AptRepository) -> Result<()> {
     Ok(())
 }
 
+pub fn list_installed_packages() -> impl Stream<Item = Result<String>> {
+    stream! {
+        let status_file = File::open("/var/lib/dpkg/status").await?;
+        let reader = BufReader::new(status_file);
+        let mut lines = reader.lines();
+        let mut package_name = String::new();
+
+        while let Some(line) = lines.next_line().await? {
+            let mut fragments = line.split(": ");
+            let first_fragment = fragments.next().unwrap();
+
+            match first_fragment {
+                "Package" => package_name = fragments.next().unwrap().to_string(),
+                "Status" => {
+                    if fragments.next() == Some("install ok installed") {
+                        yield Ok(package_name.clone());
+                    }
+                },
+                _ => continue,
+            }
+        }
+    }
+}
+
 pub async fn install_packages(names: &Vec<String>) -> Result<()> {
-    let status_file = File::open("/var/lib/dpkg/status").await?;
-    let reader = BufReader::new(status_file);
-    let mut lines = reader.lines();
-
     let mut to_be_installed = names.clone();
-    let mut package_name = String::new();
+    let packages = list_installed_packages();
+    tokio::pin!(packages);
 
-    while let Some(line) = lines.next_line().await? {
+    while let Some(Ok(package)) = packages.next().await {
         if to_be_installed.len() == 0 {
             break;
         }
 
-        let mut fragments = line.split(": ");
-        let first_fragment = fragments.next().unwrap();
-
-        match first_fragment {
-            "Package" => package_name = fragments.next().unwrap().to_string(),
-            "Status" => {
-                if names.contains(&package_name) &&
-                    fragments.next() == Some("install ok installed") {
-                    to_be_installed.retain(|pkg| pkg != &package_name);
-                }
-            },
-            _ => continue,
-        }
+        to_be_installed.retain(|pkg| pkg != &package);
     }
 
     if to_be_installed.len() == 0 {
