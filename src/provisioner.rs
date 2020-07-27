@@ -32,9 +32,18 @@ impl Provisioner {
         Ok(())
     }
 
+    async fn configure_app_image(&self) -> Result<(), Error> {
+        for app in &self.config.app_image.apps {
+            actions::install_app_image_app(app).await?;
+        }
+
+        Ok(())
+    }
+
     async fn configure_all(&self) -> Result<(), Error> {
         self.configure_networking().await?;
         self.configure_apt().await?;
+        self.configure_app_image().await?;
 
         Ok(())
     }

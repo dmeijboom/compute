@@ -24,5 +24,14 @@
       'postgresql-client',
       'silversearcher-ag'
     ]
+  },
+  appImage: {
+    apps: [
+      {
+        name: 'neovim',
+        url: 'https://github.com/neovim/neovim/releases/download/nightly/nvim.appimage',
+        version: '1'
+      }
+    ]
   }
 }

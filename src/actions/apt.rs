@@ -1,39 +1,16 @@
-use std::process::{Stdio};
 use std::io::{Result, Error, ErrorKind};
 
 use async_stream::stream;
 use tokio::stream::Stream;
 use tokio::fs::{self, File};
-use tokio::process::Command;
 use tokio::stream::StreamExt;
 use tokio::io::{BufReader, AsyncBufReadExt};
 
-use super::write_file;
+use super::{write_file, run_cmd};
 use crate::config::apt::AptRepository;
 
-async fn run_apt_get(args: &[&str]) -> Result<()> {
-    log::info!("running: apt-get {}", args.join(" "));
-
-    let status = Command::new("apt-get")
-        .args(args)
-        .stdin(Stdio::null())
-        .stdout(Stdio::inherit())
-        .stderr(Stdio::inherit())
-        .spawn()?
-        .await?;
-
-    if !status.success() {
-        return Err(Error::new(
-            ErrorKind::Other,
-            format!("failed to run apt-get, status code: {}", status.code().unwrap()),
-        ));
-    }
-
-    Ok(())
-}
-
 pub async fn update_packages() -> Result<()> {
-    run_apt_get(&["update"]).await
+    run_cmd("apt-get", &["update"], true, None).await
 }
 
 pub async fn add_repository(repo: &AptRepository) -> Result<()> {
@@ -107,11 +84,11 @@ pub async fn install_packages(names: &Vec<String>) -> Result<()> {
     update_packages().await?;
 
     println!("installing packages: {}", to_be_installed.join(", "));
-    run_apt_get(&[&["install", "--no-install-recommends", "-y"][..], &to_be_installed
+    run_cmd("apt-get", &[&["install", "--no-install-recommends", "-y"][..], &to_be_installed
         .iter()
         .map(|pkg| pkg.as_str())
         .collect::<Vec<_>>()[..],
-    ].concat()).await?;
+    ].concat(), true, None).await?;
 
     Ok(())
 }

@@ -17,7 +17,7 @@ pub struct AptRepository {
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Apt {
+pub struct Config {
     pub packages: Vec<String>,
     #[serde(default)]
     pub repositories: Vec<AptRepository>,
