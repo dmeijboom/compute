@@ -5,6 +5,7 @@ use clap::derive::Clap;
 mod opts;
 mod config;
 mod actions;
+mod templates;
 mod provisioner;
 
 use config::Config;

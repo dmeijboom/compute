@@ -1,6 +1,12 @@
 {
   networking: {
-    hostname: 'dmeijboom-linux-dev1'
+    hostname: 'dmeijboom-linux-dev1',
+    hosts: [
+      {
+        addr: '127.0.0.1',
+        names: ['postgres', 'client-api']
+      }
+    ]
   },
   apt: {
     repositories: [
@@ -9,6 +15,12 @@
         url: 'https://packages.cloud.google.com/apt',
         keyUrl: 'https://packages.cloud.google.com/apt/doc/apt-key.gpg',
         distro: 'cloud-sdk',
+      },
+      {
+        name: 'nodesource',
+        url: 'https://deb.nodesource.com/node_14.x',
+        keyUrl: 'https://deb.nodesource.com/gpgkey/nodesource.gpg.key',
+        distro: 'bionic'
       }
     ],
     packages: [

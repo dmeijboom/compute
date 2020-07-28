@@ -1,5 +1,8 @@
 use super::actions;
 use super::config::Config;
+use super::templates::Template;
+
+use tera::Context;
 
 type Error = Box<dyn std::error::Error>;
 
@@ -15,9 +18,26 @@ impl Provisioner {
     }
 
     async fn configure_networking(&self) -> Result<(), Error> {
-        let hostname_tmpl = format!("{}\n", self.config.networking.hostname);
+        let mut hostname_ctx = Context::new();
+        hostname_ctx.insert("hostname", &self.config.networking.hostname);
 
-        actions::write_file("/etc/hostname", hostname_tmpl.as_bytes()).await?;
+        actions::write_template(
+            "/etc/hostname",
+            Template::NetworkingHostname,
+            hostname_ctx,
+        ).await?;
+
+        if self.config.networking.hosts.len() > 0 {
+            let mut hosts_ctx = Context::new();
+            hosts_ctx.insert("hostname", &self.config.networking.hostname);
+            hosts_ctx.insert("hosts", &self.config.networking.hosts);
+
+            actions::write_template(
+                "/etc/hosts",
+                Template::NetworkingHosts,
+                hosts_ctx,
+            ).await?;
+        }
 
         Ok(())
     }
