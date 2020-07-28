@@ -1,10 +1,10 @@
 {
   networking: {
-    hostname: 'dmeijboom-linux-dev1',
+    hostname: 'example-hostname',
     hosts: [
       {
         addr: '127.0.0.1',
-        names: ['postgres', 'client-api']
+        names: ['some-other-dns-name']
       }
     ]
   },
@@ -15,25 +15,10 @@
         url: 'https://packages.cloud.google.com/apt',
         keyUrl: 'https://packages.cloud.google.com/apt/doc/apt-key.gpg',
         distro: 'cloud-sdk',
-      },
-      {
-        name: 'nodesource',
-        url: 'https://deb.nodesource.com/node_14.x',
-        keyUrl: 'https://deb.nodesource.com/gpgkey/nodesource.gpg.key',
-        distro: 'bionic'
       }
     ],
     packages: [
-      // Core packages
-      'rng-tools', // to make sure that the machine has enough entropy
-      'nfs-common',
-
-      // Terminal tools
-      'jq',
-      'httpie',
       'autojump',
-      'docker.io',
-      'postgresql-client',
       'silversearcher-ag'
     ]
   },
