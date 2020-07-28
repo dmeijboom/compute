@@ -5,28 +5,10 @@ use std::io::{Result, Error, ErrorKind};
 
 use tokio::fs;
 use tokio::stream::StreamExt;
-use tokio::task::spawn_blocking;
 
+use crate::ioutil::chown;
 use crate::config::app_image::App;
 use super::{list_installed_packages, run_cmd, CmdOpts};
-
-async fn chown(filename: String, uid: u32, gid: u32) -> Result<()> {
-    let original_filename = filename.clone();
-    let result = spawn_blocking(move || {
-        unsafe {
-            return libc::chown(filename.as_ptr() as *const i8, uid, gid);
-        }
-    }).await?;
-
-    if result != 0 || result != -1 {
-        return Err(Error::new(
-            ErrorKind::Other,
-            format!("failed to change ownership of file {}: code {}", original_filename, result),
-        ));
-    }
-
-    Ok(())
-}
 
 pub async fn install_app_image_app(app: &App) -> Result<()> {
     let unprivileged_uid = env::var("SUDO_UID")

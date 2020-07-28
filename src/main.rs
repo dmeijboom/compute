@@ -5,6 +5,7 @@ use std::process::exit;
 use clap::derive::Clap;
 
 mod opts;
+mod ioutil;
 mod config;
 mod actions;
 mod templates;
@@ -22,17 +23,22 @@ async fn main() {
 
     match opts.cmd {
         Cmd::Apply(opts) => {
-            unsafe {
-                if libc::getuid() != 0 {
-                    eprintln!("compute apply requires root privileges");
-                    exit(1);
-                }
+            if ioutil::getuid() != 0 {
+                eprintln!("compute apply requires root privileges");
+                exit(1);
             }
 
             if let Some(uid) = opts.uid {
                 env::set_var("SUDO_UID", uid.to_string());
             } else if env::var("SUDO_UID").is_err() {
                 eprintln!("either run compute apply with sudo or set the uid manually");
+                exit(1);
+            }
+
+            if let Some(gid) = opts.gid {
+                env::set_var("SUDO_GID", gid.to_string());
+            } else if env::var("SUDO_GID").is_err() {
+                eprintln!("either run compute apply with sudo or set the gid manually");
                 exit(1);
             }
 

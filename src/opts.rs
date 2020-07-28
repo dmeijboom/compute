@@ -14,6 +14,7 @@ pub struct ApplyOpts {
     #[clap(short)]
     pub filename: PathBuf,
     pub uid: Option<u32>,
+    pub gid: Option<u32>,
 }
 
 #[derive(Debug, Clap)]

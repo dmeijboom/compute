@@ -2,9 +2,10 @@ use std::path::Path;
 use std::marker::Unpin;
 use std::io::{Result, Error, ErrorKind};
 
-use tokio::fs;
 use crc32fast::Hasher;
 use tera::{Tera, Context};
+use tokio::io::AsyncWriteExt;
+use tokio::fs::{self, OpenOptions};
 
 use crate::templates::Template;
 
@@ -30,7 +31,20 @@ where P: AsRef<Path>, S: AsRef<[u8]> + Unpin {
     }
 
     println!("updating file: {}", filename.as_ref().to_string_lossy());
-    fs::write(filename, source).await?;
+    let mut file = OpenOptions::new()
+        .write(true)
+        .truncate(true)
+        .open(filename)
+        .await?;
+
+    let mut perms = file
+        .metadata()
+        .await?
+        .permissions();
+    perms.set_readonly(true);
+
+    file.write_all(source.as_ref()).await?;
+    file.set_permissions(perms).await?;
 
     Ok(true)
 }
