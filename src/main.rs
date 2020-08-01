@@ -44,11 +44,14 @@ async fn main() {
 
             println!(">> reading config");
 
-            let contents = fs::read_to_string(opts.filename)
+            let contents = fs::read_to_string(&opts.filename)
                 .expect("failed to read config");
             let config: Config = json5::from_str(&contents)
                 .expect("failed to parse config");
-            let provisioner = Provisioner::new(config);
+            let mut path = opts.filename;
+            path.pop();
+
+            let provisioner = Provisioner::new(path, config);
 
             provisioner.run().await;
         },

@@ -1,4 +1,8 @@
+use std::str;
+use std::path::PathBuf;
+
 use super::actions;
+use super::ioutil::chown;
 use super::config::Config;
 use super::templates::Template;
 
@@ -8,12 +12,14 @@ type Error = Box<dyn std::error::Error>;
 
 pub struct Provisioner {
     config: Config,
+    root_dir: PathBuf,
 }
 
 impl Provisioner {
-    pub fn new(config: Config) -> Self {
+    pub fn new(root_dir: PathBuf, config: Config) -> Self {
         Self {
             config: config,
+            root_dir: root_dir,
         }
     }
 
@@ -60,15 +66,37 @@ impl Provisioner {
         Ok(())
     }
 
-    async fn configure_all(&self) -> Result<(), Error> {
-        self.configure_networking().await?;
-        self.configure_apt().await?;
-        self.configure_app_image().await?;
+    async fn configure_files(self) -> Result<(), Error> {
+        for file in self.config.files.into_iter() {
+            let mut src = self.root_dir.clone();
+            src.push(&file.template);
+
+            let contents = &tokio::fs::read(src).await?;
+
+            if actions::write_user_template(
+                &file.path,
+                str::from_utf8(contents)?,
+                file.context,
+            ).await? {
+                if let Some((uid, gid)) = file.owner {
+                    chown(&file.path, uid, gid).await?;
+                }
+            }
+        }
 
         Ok(())
     }
 
-    pub async fn run(&self) {
+    async fn configure_all(self) -> Result<(), Error> {
+        self.configure_networking().await?;
+        self.configure_apt().await?;
+        self.configure_app_image().await?;
+        self.configure_files().await?;
+
+        Ok(())
+    }
+
+    pub async fn run(self) {
         println!(">> provisioning");
 
         match self.configure_all().await {

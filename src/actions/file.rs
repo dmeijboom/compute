@@ -3,9 +3,9 @@ use std::marker::Unpin;
 use std::io::{Result, Error, ErrorKind};
 
 use crc32fast::Hasher;
-use tera::{Tera, Context};
 use tokio::io::AsyncWriteExt;
 use tokio::fs::{self, OpenOptions};
+use tera::{Tera, Context, Map, Value};
 
 use crate::templates::Template;
 
@@ -53,6 +53,24 @@ pub async fn write_template<P>(filename: P, template: Template, ctx: Context) ->
 where P: AsRef<Path> {
     let contents = template.get_contents();
     let contents = Tera::one_off(contents, &ctx, false)
+        .map_err(|e| Error::new(
+            ErrorKind::Other,
+            format!("failed to render template: {}", e),
+        ))?;
+
+    write_file(filename, contents.as_bytes()).await
+}
+
+pub async fn write_user_template<P, S>(filename: P, source: S, ctx: Map<String, Value>) -> Result<bool>
+where P: AsRef<Path>, S: AsRef<str> {
+    let contents = Tera::one_off(
+        source.as_ref(),
+        &Context::from_value(Value::Object(ctx)).map_err(|e| Error::new(
+            ErrorKind::Other,
+            format!("failed to get context from map: {}", e),
+        ))?,
+        false,
+    )
         .map_err(|e| Error::new(
             ErrorKind::Other,
             format!("failed to render template: {}", e),
