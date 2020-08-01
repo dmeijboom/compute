@@ -7,6 +7,7 @@ pub struct TemplateFile {
     pub template: String,
     pub owner: Option<(u32, u32)>,
     pub mode: Option<u32>,
+    #[serde(default)]
     pub context: Map<String, Value>,
 }
 
