@@ -15,10 +15,9 @@ pub struct AptRepository {
     pub components: Vec<String>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Default, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Config {
     pub packages: Vec<String>,
-    #[serde(default)]
     pub repositories: Vec<AptRepository>,
 }

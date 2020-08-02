@@ -13,6 +13,8 @@ libc = "0.2"
 json5 = "0.2"
 reqwest = "0.10"
 crc32fast = "1.2"
+rusoto_s3 = "0.45"
+rusoto_core = "0.45"
 async-stream = "0.2"
 pretty_env_logger = "0.4"
 clap = { version = "3.0.0-beta.1" }

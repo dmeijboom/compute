@@ -51,7 +51,11 @@ async fn main() {
             let mut path = opts.filename;
             path.pop();
 
-            let provisioner = Provisioner::new(path, config);
+            let provisioner = Provisioner::new(
+                path,
+                opts.skip_downloads,
+                config,
+            );
 
             provisioner.run().await;
         },

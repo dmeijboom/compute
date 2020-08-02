@@ -3,8 +3,8 @@ use std::path::PathBuf;
 
 use super::actions;
 use super::ioutil::chown;
-use super::config::Config;
 use super::templates::Template;
+use super::config::{Config, files::TemplateSource};
 
 use tera::Context;
 
@@ -13,25 +13,29 @@ type Error = Box<dyn std::error::Error>;
 pub struct Provisioner {
     config: Config,
     root_dir: PathBuf,
+    skip_downloads: bool,
 }
 
 impl Provisioner {
-    pub fn new(root_dir: PathBuf, config: Config) -> Self {
+    pub fn new(root_dir: PathBuf, skip_downloads: bool, config: Config) -> Self {
         Self {
             config: config,
             root_dir: root_dir,
+            skip_downloads: skip_downloads,
         }
     }
 
     async fn configure_networking(&self) -> Result<(), Error> {
-        let mut hostname_ctx = Context::new();
-        hostname_ctx.insert("hostname", &self.config.networking.hostname);
+        if let Some(hostname) = &self.config.networking.hostname {
+            let mut hostname_ctx = Context::new();
+            hostname_ctx.insert("hostname", hostname);
 
-        actions::write_template(
-            "/etc/hostname",
-            Template::NetworkingHostname,
-            hostname_ctx,
-        ).await?;
+            actions::write_template(
+                "/etc/hostname",
+                Template::NetworkingHostname,
+                hostname_ctx,
+            ).await?;
+        }
 
         if self.config.networking.hosts.len() > 0 {
             let mut hosts_ctx = Context::new();
@@ -76,14 +80,33 @@ impl Provisioner {
 
     async fn configure_files(self) -> Result<(), Error> {
         for file in self.config.files.into_iter() {
-            let mut src = self.root_dir.clone();
-            src.push(&file.template);
+            let contents = match file.source() {
+                TemplateSource::Local(template) => {
+                    let mut src = self.root_dir.clone();
+                    src.push(&template);
 
-            let contents = &tokio::fs::read(src).await?;
+                    tokio::fs::read(src).await?
+                },
+                TemplateSource::S3(file) => {
+                    if self.skip_downloads {
+                        println!("skipping download for: s3/{}/{}", file.bucket_name, file.path);
+                        continue;
+                    }
+
+                    actions::download_file(
+                        file.path.clone(),
+                        self.config.s3.buckets
+                            .iter()
+                            .filter(|b| b.name == file.bucket_name)
+                            .next()
+                            .unwrap(),
+                    ).await?
+                },
+            };
 
             if actions::write_user_template(
                 &file.path,
-                str::from_utf8(contents)?,
+                str::from_utf8(&contents)?,
                 file.context,
             ).await? {
                 if let Some((uid, gid)) = file.owner {

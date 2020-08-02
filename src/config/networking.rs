@@ -10,6 +10,6 @@ pub struct Host {
 #[derive(Debug, Default, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Config {
-    pub hostname: String,
+    pub hostname: Option<String>,
     pub hosts: Vec<Host>,
 }

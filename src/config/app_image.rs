@@ -8,9 +8,8 @@ pub struct App {
     pub version: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Default, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Config {
-    #[serde(default)]
     pub apps: Vec<App>,
 }

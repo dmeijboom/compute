@@ -13,8 +13,12 @@ pub struct Opts {
 pub struct ApplyOpts {
     #[clap(short)]
     pub filename: PathBuf,
+    #[clap(short)]
     pub uid: Option<u32>,
+    #[clap(short)]
     pub gid: Option<u32>,
+    #[clap(long)]
+    pub skip_downloads: bool,
 }
 
 #[derive(Debug, Clap)]
