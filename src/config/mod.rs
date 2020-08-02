@@ -2,6 +2,7 @@ use serde::Deserialize;
 
 pub mod apt;
 pub mod files;
+pub mod scripts;
 pub mod app_image;
 pub mod networking;
 
@@ -12,4 +13,5 @@ pub struct Config {
     pub apt: apt::Config,
     pub app_image: app_image::Config,
     pub files: files::Config,
+    pub scripts: scripts::Config,
 }

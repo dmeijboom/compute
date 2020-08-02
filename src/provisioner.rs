@@ -66,6 +66,14 @@ impl Provisioner {
         Ok(())
     }
 
+    async fn configure_scripts(&self) -> Result<(), Error> {
+        for script in &self.config.scripts {
+            actions::run_script(&script).await?;
+        }
+
+        Ok(())
+    }
+
     async fn configure_files(self) -> Result<(), Error> {
         for file in self.config.files.into_iter() {
             let mut src = self.root_dir.clone();
@@ -91,6 +99,7 @@ impl Provisioner {
         self.configure_networking().await?;
         self.configure_apt().await?;
         self.configure_app_image().await?;
+        self.configure_scripts().await?;
         self.configure_files().await?;
 
         Ok(())

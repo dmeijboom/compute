@@ -6,6 +6,8 @@ use std::io::{Result, Error, ErrorKind};
 
 use tokio::process::Command;
 
+use crate::config::scripts::Script;
+
 pub struct CmdOpts<'a> {
     pub name: &'a str,
     pub privileged: bool,
@@ -62,4 +64,23 @@ pub async fn run_cmd(opts: CmdOpts<'_>) -> Result<()> {
     }
 
     Ok(())
+}
+
+pub async fn run_script(script: &Script) -> Result<()> {
+    if let Ok(_) = run_cmd(CmdOpts {
+        name: "bash",
+        args: &["-c", &script.test],
+        ..CmdOpts::default()
+    }).await {
+        println!("no changes found for script: {}", script.name);
+        return Ok(());
+    }
+
+    println!("running script: {}", script.name);
+
+    run_cmd(CmdOpts {
+        name: "bash",
+        args: &["-c", &script.cmd],
+        ..CmdOpts::default()
+    }).await
 }
