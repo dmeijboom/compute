@@ -2,8 +2,8 @@ use std::str;
 use std::path::PathBuf;
 
 use super::actions;
-use super::ioutils::chown;
 use super::templates::Template;
+use super::ioutils::{chmod, chown};
 use super::config::{Config, files::TemplateSource};
 
 use tera::Context;
@@ -112,6 +112,11 @@ impl Provisioner {
                 if let Some((uid, gid)) = file.owner {
                     log::info!("changing ownership of: {} to {}:{}", file.path, uid, gid);
                     chown(&file.path, uid, gid).await?;
+                }
+
+                if let Some(mode) = file.mode {
+                    log::info!("changing mode of: {} to {}", file.path, mode);
+                    chmod(&file.path, mode).await?;
                 }
             }
         }
