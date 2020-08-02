@@ -39,6 +39,10 @@ pub async fn run_cmd(opts: CmdOpts<'_>) -> Result<()> {
                 .parse()
                 .unwrap(),
         })
+        .env("HOME", match opts.privileged {
+            true => env::var("HOME").unwrap(),
+            false => format!("/home/{}", env::var("SUDO_USER").unwrap()),
+        })
         .args(opts.args)
         .stdin(Stdio::null())
         .stdout(match opts.inherit_output {
@@ -81,6 +85,8 @@ pub async fn run_script(script: &Script) -> Result<()> {
     run_cmd(CmdOpts {
         name: "bash",
         args: &["-c", &script.cmd],
+        privileged: script.privileged,
+        inherit_output: true,
         ..CmdOpts::default()
     }).await
 }
