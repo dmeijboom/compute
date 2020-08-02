@@ -5,8 +5,8 @@ use std::process::exit;
 use clap::derive::Clap;
 
 mod opts;
-mod ioutil;
 mod config;
+mod ioutils;
 mod actions;
 mod templates;
 mod provisioner;
@@ -23,7 +23,7 @@ async fn main() {
 
     match opts.cmd {
         Cmd::Apply(opts) => {
-            if ioutil::getuid() != 0 {
+            if ioutils::getuid() != 0 {
                 eprintln!("compute apply requires root privileges");
                 exit(1);
             }

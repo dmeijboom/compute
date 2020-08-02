@@ -2,7 +2,7 @@ use std::str;
 use std::path::PathBuf;
 
 use super::actions;
-use super::ioutil::chown;
+use super::ioutils::chown;
 use super::templates::Template;
 use super::config::{Config, files::TemplateSource};
 
@@ -110,6 +110,7 @@ impl Provisioner {
                 file.context,
             ).await? {
                 if let Some((uid, gid)) = file.owner {
+                    log::info!("changing ownership of: {} to {}:{}", file.path, uid, gid);
                     chown(&file.path, uid, gid).await?;
                 }
             }

@@ -6,7 +6,7 @@ use std::io::{Result, Error, ErrorKind};
 use tokio::fs;
 use tokio::stream::StreamExt;
 
-use crate::ioutil::chown;
+use crate::ioutils::chown;
 use crate::config::app_image::App;
 use super::{list_installed_packages, run_cmd, CmdOpts};
 
