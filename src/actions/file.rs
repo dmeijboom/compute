@@ -33,6 +33,7 @@ where P: AsRef<Path>, S: AsRef<[u8]> + Unpin {
     println!("updating file: {}", filename.as_ref().to_string_lossy());
     let mut file = OpenOptions::new()
         .write(true)
+        .create(true)
         .truncate(true)
         .open(filename)
         .await?;
