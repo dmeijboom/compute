@@ -3,9 +3,9 @@ use std::marker::Unpin;
 use std::io::{Result, Error, ErrorKind};
 
 use crc32fast::Hasher;
-use tokio::io::AsyncWriteExt;
-use tokio::fs::{self, OpenOptions};
+use tokio::fs::{File, OpenOptions};
 use tera::{Tera, Context, Map, Value};
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
 use crate::templates::Template;
 
@@ -21,10 +21,12 @@ where P: AsRef<Path>, S: AsRef<[u8]> + Unpin {
     let right_checksum = checksum(source.as_ref());
 
     if filename.as_ref().exists() {
-        let left_source = fs::read_to_string(filename.as_ref()).await?;
-        let left_checksum = checksum(left_source.as_bytes());
+        let mut left_file = File::open(filename.as_ref()).await?;
 
-        if right_checksum == left_checksum {
+        let mut left_buffer = Vec::new();
+        left_file.read_to_end(&mut left_buffer).await?;
+
+        if right_checksum == checksum(&left_buffer) {
             println!("no changes found for: {}", filename.as_ref().to_string_lossy());
             return Ok(false);
         }

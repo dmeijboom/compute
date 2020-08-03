@@ -80,35 +80,42 @@ impl Provisioner {
 
     async fn configure_files(self) -> Result<(), Error> {
         for file in self.config.files.into_iter() {
-            let contents = match file.source() {
+            let updated = match file.source() {
                 TemplateSource::Local(template) => {
                     let mut src = self.root_dir.clone();
                     src.push(&template);
 
-                    tokio::fs::read(src).await?
+                    let contents = tokio::fs::read(src).await?;
+
+                    actions::write_user_template(
+                        &file.path,
+                        str::from_utf8(&contents)?,
+                        file.context,
+                    ).await?
                 },
-                TemplateSource::S3(file) => {
+                TemplateSource::S3(s3file) => {
                     if self.skip_downloads {
-                        println!("skipping download for: s3/{}/{}", file.bucket_name, file.path);
+                        println!("skipping download for: s3/{}/{}", s3file.bucket_name, s3file.path);
                         continue;
                     }
 
-                    actions::download_file(
-                        file.path.clone(),
+                    let contents = actions::download_file(
+                        s3file.path.clone(),
                         self.config.s3.buckets
                             .iter()
-                            .filter(|b| b.name == file.bucket_name)
+                            .filter(|b| b.name == s3file.bucket_name)
                             .next()
                             .unwrap(),
+                    ).await?;
+
+                    actions::write_file(
+                        &file.path,
+                        &contents,
                     ).await?
                 },
             };
 
-            if actions::write_user_template(
-                &file.path,
-                str::from_utf8(&contents)?,
-                file.context,
-            ).await? {
+            if updated {
                 if let Some((uid, gid)) = file.owner {
                     log::info!("changing ownership of: {} to {}:{}", file.path, uid, gid);
                     chown(&file.path, uid, gid).await?;
