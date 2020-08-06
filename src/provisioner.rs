@@ -2,11 +2,8 @@ use std::str;
 use std::path::PathBuf;
 
 use super::actions;
-use super::templates::Template;
 use super::ioutils::{chmod, chown};
 use super::config::{Config, files::TemplateSource};
-
-use tera::Context;
 
 type Error = Box<dyn std::error::Error>;
 
@@ -23,33 +20,6 @@ impl Provisioner {
             root_dir: root_dir,
             skip_downloads: skip_downloads,
         }
-    }
-
-    async fn configure_networking(&self) -> Result<(), Error> {
-        if let Some(hostname) = &self.config.networking.hostname {
-            let mut hostname_ctx = Context::new();
-            hostname_ctx.insert("hostname", hostname);
-
-            actions::write_template(
-                "/etc/hostname",
-                Template::NetworkingHostname,
-                hostname_ctx,
-            ).await?;
-        }
-
-        if self.config.networking.hosts.len() > 0 {
-            let mut hosts_ctx = Context::new();
-            hosts_ctx.insert("hostname", &self.config.networking.hostname);
-            hosts_ctx.insert("hosts", &self.config.networking.hosts);
-
-            actions::write_template(
-                "/etc/hosts",
-                Template::NetworkingHosts,
-                hosts_ctx,
-            ).await?;
-        }
-
-        Ok(())
     }
 
     async fn configure_apt(&self) -> Result<(), Error> {
@@ -87,7 +57,7 @@ impl Provisioner {
 
                     let contents = tokio::fs::read(src).await?;
 
-                    actions::write_user_template(
+                    actions::write_template(
                         &file.path,
                         str::from_utf8(&contents)?,
                         file.context,
@@ -132,7 +102,6 @@ impl Provisioner {
     }
 
     async fn configure_all(self) -> Result<(), Error> {
-        self.configure_networking().await?;
         self.configure_apt().await?;
         self.configure_app_image().await?;
         self.configure_scripts().await?;

@@ -5,13 +5,10 @@ pub mod apt;
 pub mod files;
 pub mod scripts;
 pub mod app_image;
-pub mod networking;
 
 #[derive(Debug, Default, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Config {
-    #[serde(default)]
-    pub networking: networking::Config,
     #[serde(default)]
     pub apt: apt::Config,
     #[serde(default)]

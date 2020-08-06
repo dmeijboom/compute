@@ -7,8 +7,6 @@ use tokio::fs::{File, OpenOptions};
 use tera::{Tera, Context, Map, Value};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
-use crate::templates::Template;
-
 fn checksum(buf: &[u8]) -> u32 {
     let mut hasher = Hasher::new();
 
@@ -52,19 +50,7 @@ where P: AsRef<Path>, S: AsRef<[u8]> + Unpin {
     Ok(true)
 }
 
-pub async fn write_template<P>(filename: P, template: Template, ctx: Context) -> Result<bool>
-where P: AsRef<Path> {
-    let contents = template.get_contents();
-    let contents = Tera::one_off(contents, &ctx, false)
-        .map_err(|e| Error::new(
-            ErrorKind::Other,
-            format!("failed to render template: {}", e),
-        ))?;
-
-    write_file(filename, contents.as_bytes()).await
-}
-
-pub async fn write_user_template<P, S>(filename: P, source: S, ctx: Map<String, Value>) -> Result<bool>
+pub async fn write_template<P, S>(filename: P, source: S, ctx: Map<String, Value>) -> Result<bool>
 where P: AsRef<Path>, S: AsRef<str> {
     let contents = Tera::one_off(
         source.as_ref(),

@@ -1,13 +1,4 @@
 {
-  networking: {
-    hostname: 'example-hostname',
-    hosts: [
-      {
-        addr: '127.0.0.1',
-        names: ['some-other-dns-name']
-      }
-    ]
-  },
   apt: {
     repositories: [
       {

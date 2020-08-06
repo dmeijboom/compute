@@ -8,7 +8,6 @@ mod opts;
 mod config;
 mod ioutils;
 mod actions;
-mod templates;
 mod provisioner;
 
 use config::Config;
