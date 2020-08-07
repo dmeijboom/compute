@@ -1,0 +1,21 @@
+{
+  module: {
+    name: "networking",
+    vars: {
+      hostname: "string",
+      hosts: "array"
+    }
+  },
+  config: {
+    files: [
+      {
+        path: '/etc/hostname',
+        template: 'templates/networking/hostname'
+      },
+      {
+        path: '/etc/hosts',
+        template: 'templates/networking/hosts'
+      }
+    ]
+  }
+}

@@ -8,6 +8,7 @@ mod opts;
 mod config;
 mod ioutils;
 mod actions;
+mod modules;
 mod provisioner;
 
 use config::Config;
@@ -50,13 +51,8 @@ async fn main() {
             let mut path = opts.filename;
             path.pop();
 
-            let provisioner = Provisioner::new(
-                path,
-                opts.skip_downloads,
-                config,
-            );
-
-            provisioner.run().await;
+            let provisioner = Provisioner::new(opts.skip_downloads);
+            provisioner.run(path, &config).await;
         },
     }
 }
