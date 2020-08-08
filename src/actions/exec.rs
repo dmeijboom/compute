@@ -2,10 +2,10 @@ use std::env;
 use std::path::Path;
 use std::process::Stdio;
 use std::env::current_dir;
-use std::io::{Result, Error, ErrorKind};
 
 use tokio::process::Command;
 
+use crate::result::{Result, Error};
 use crate::config::scripts::Script;
 
 pub struct CmdOpts<'a> {
@@ -61,8 +61,7 @@ pub async fn run_cmd(opts: CmdOpts<'_>) -> Result<()> {
         .await?;
 
     if !status.success() {
-        return Err(Error::new(
-            ErrorKind::Other,
+        return Err(Error::Custom(
             format!("failed to run {}, status code: {}", opts.name, status.code().unwrap()),
         ));
     }

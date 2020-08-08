@@ -5,11 +5,10 @@ use tera::{Map, Value};
 use async_recursion::async_recursion;
 
 use super::actions;
+use super::result::Result;
 use super::modules::load_module;
 use super::ioutils::{chmod, chown};
 use super::config::{Config, files::TemplateSource};
-
-type Error = Box<dyn std::error::Error>;
 
 pub struct Provisioner {
     skip_downloads: bool,
@@ -22,7 +21,7 @@ impl Provisioner {
         }
     }
 
-    async fn configure_apt(&self, _root_dir: &Path, config: &Config) -> Result<(), Error> {
+    async fn configure_apt(&self, _root_dir: &Path, config: &Config) -> Result<()> {
         for repo in &config.apt.repositories {
             actions::add_repository(repo).await?;
         }
@@ -32,15 +31,7 @@ impl Provisioner {
         Ok(())
     }
 
-    async fn configure_app_image(&self, _root_dir: &Path, config: &Config) -> Result<(), Error> {
-        for app in &config.app_image.apps {
-            actions::install_app_image_app(app).await?;
-        }
-
-        Ok(())
-    }
-
-    async fn configure_scripts(&self, _root_dir: &Path, config: &Config) -> Result<(), Error> {
+    async fn configure_scripts(&self, _root_dir: &Path, config: &Config) -> Result<()> {
         for script in &config.scripts {
             actions::run_script(script).await?;
         }
@@ -48,7 +39,7 @@ impl Provisioner {
         Ok(())
     }
 
-    async fn configure_files(&self, root_dir: &Path, config: &Config, vars: Option<Map<String, Value>>) -> Result<(), Error> {
+    async fn configure_files(&self, root_dir: &Path, config: &Config, vars: Option<Map<String, Value>>) -> Result<()> {
         for file in &config.files {
             let updated = match file.source() {
                 TemplateSource::Local(template) => {
@@ -114,14 +105,14 @@ impl Provisioner {
     }
 
     #[async_recursion]
-    pub async fn configure_modules(&self, _root_dir: &Path, config: &Config) -> Result<(), Error> {
+    pub async fn configure_modules(&self, _root_dir: &Path, config: &Config) -> Result<()> {
         for (name, config) in &config.modules {
             log::info!("loading module: {}", name);
 
             let (module_root, module) = load_module(name).await?;
 
             if let Value::Object(vars) = config {
-                self.configure_all(
+                self.run(
                     &module_root,
                     &module.config,
                     Some(vars.clone()),
@@ -135,24 +126,19 @@ impl Provisioner {
     }
 
     #[async_recursion]
-    pub async fn configure_all(&self, root_dir: &Path, config: &Config, vars: Option<Map<String, Value>>) -> Result<(), Error> {
+    pub async fn run(&self, root_dir: &Path, config: &Config, vars: Option<Map<String, Value>>) -> Result<()> {
+        println!("configuring modules");
         self.configure_modules(root_dir, config).await?;
+
+        println!("configuring apt");
         self.configure_apt(root_dir, config).await?;
-        self.configure_app_image(root_dir, config).await?;
+
+        println!("configuring scripts");
         self.configure_scripts(root_dir, config).await?;
+
+        println!("configuring files");
         self.configure_files(root_dir, config, vars).await?;
 
         Ok(())
-    }
-
-    pub async fn run(&self, root_dir: PathBuf, config: &Config) {
-        println!(">> provisioning");
-
-        match self.configure_all(&root_dir, config, None).await {
-            Ok(_) => log::debug!("task finished succesfully"),
-            Err(e) => log::error!("task errored: {}", e),
-        }
-
-        println!(">> finished");
     }
 }

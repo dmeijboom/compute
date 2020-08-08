@@ -1,11 +1,12 @@
 use std::path::Path;
 use std::ffi::CString;
 use std::fs::Permissions;
-use std::io::{Result, Error, ErrorKind};
 use std::os::unix::prelude::PermissionsExt;
 
 use tokio::fs;
 use tokio::task::spawn_blocking;
+
+use super::result::{Result, Error};
 
 pub fn getuid() -> u32 {
     unsafe {
@@ -15,10 +16,10 @@ pub fn getuid() -> u32 {
 
 pub async fn chmod<P>(filename: P, mode: u32) -> Result<()>
 where P: AsRef<Path> {
-    fs::set_permissions(
+    Ok(fs::set_permissions(
         filename.as_ref(),
         Permissions::from_mode(mode),
-    ).await
+    ).await?)
 }
 
 pub async fn chown<S>(filename: S, uid: u32, gid: u32) -> Result<()>
@@ -32,8 +33,7 @@ where S: AsRef<str> + Send {
     }).await?;
 
     if result > 0 {
-        return Err(Error::new(
-            ErrorKind::Other,
+        return Err(Error::Custom(
             format!("failed to change ownership of file {}: code {}", filename.as_ref(), result),
         ));
     }

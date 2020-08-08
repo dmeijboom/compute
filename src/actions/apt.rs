@@ -1,11 +1,10 @@
-use std::io::{Result, Error, ErrorKind};
-
 use async_stream::stream;
 use tokio::stream::Stream;
 use tokio::fs::{self, File};
 use tokio::stream::StreamExt;
 use tokio::io::{BufReader, AsyncBufReadExt};
 
+use crate::result::Result;
 use super::{write_file, run_cmd, CmdOpts};
 use crate::config::apt::AptRepository;
 
@@ -32,9 +31,9 @@ pub async fn add_repository(repo: &AptRepository) -> Result<()> {
         tmpl.as_bytes(),
     ).await? {
         let body = reqwest::get(&repo.key_url)
-            .await.map_err(|e| Error::new(ErrorKind::Other, e))?
+            .await?
             .bytes()
-            .await.map_err(|e| Error::new(ErrorKind::Other, e))?;
+            .await?;
 
         fs::write(format!("/usr/share/keyrings/{}.gpg", repo.name), body).await?;
     }

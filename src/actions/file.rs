@@ -1,11 +1,12 @@
 use std::path::Path;
 use std::marker::Unpin;
-use std::io::{Result, Error, ErrorKind};
 
 use crc32fast::Hasher;
 use tokio::fs::{File, OpenOptions};
 use tera::{Tera, Context, Map, Value};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
+
+use crate::result::Result;
 
 fn checksum(buf: &[u8]) -> u32 {
     let mut hasher = Hasher::new();
@@ -54,16 +55,9 @@ pub async fn write_template<P, S>(filename: P, source: S, ctx: Map<String, Value
 where P: AsRef<Path>, S: AsRef<str> {
     let contents = Tera::one_off(
         source.as_ref(),
-        &Context::from_value(Value::Object(ctx)).map_err(|e| Error::new(
-            ErrorKind::Other,
-            format!("failed to get context from map: {}", e),
-        ))?,
+        &Context::from_value(Value::Object(ctx))?,
         false,
-    )
-        .map_err(|e| Error::new(
-            ErrorKind::Other,
-            format!("failed to render template: {}", e),
-        ))?;
+    )?;
 
     write_file(filename, contents.as_bytes()).await
 }

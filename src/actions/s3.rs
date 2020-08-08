@@ -1,10 +1,10 @@
 use std::env;
-use std::io::{Result, Error, ErrorKind};
 
 use tokio::io::AsyncReadExt;
 use rusoto_core::Region;
 use rusoto_s3::{S3, S3Client, GetObjectRequest};
 
+use crate::result::Result;
 use crate::config::s3::Bucket;
 
 pub async fn download_file(path: String, bucket: &Bucket) -> Result<Vec<u8>> {
@@ -23,11 +23,7 @@ pub async fn download_file(path: String, bucket: &Bucket) -> Result<Vec<u8>> {
         key: path,
         ..GetObjectRequest::default()
     })
-        .await
-        .map_err(|e| Error::new(
-            ErrorKind::Other,
-            format!("failed to retrieve s3 object: {}", e),
-        ))?;
+        .await?;
 
     let mut reader = object.body.unwrap().into_async_read();
     let mut contents = vec![];

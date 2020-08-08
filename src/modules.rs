@@ -1,12 +1,12 @@
 use std::env;
 use std::path::PathBuf;
-use std::io::{Result, Error, ErrorKind};
 
 use tokio::fs;
 use tera::{Map, Value};
 use serde::Deserialize;
 
 use super::config::Config;
+use super::result::{Result, Error};
 
 pub async fn load_module(name: &str) -> Result<(PathBuf, Module)> {
     let mut config_path = PathBuf::from(format!(
@@ -17,19 +17,14 @@ pub async fn load_module(name: &str) -> Result<(PathBuf, Module)> {
     ));
 
     if !config_path.exists() {
-        return Err(Error::new(ErrorKind::Other, format!("failed to load module: {}", name)));
+        return Err(Error::Custom(format!("failed to load module {}", name)));
     }
 
     let contents = fs::read_to_string(&config_path).await?;
-    let module = json5::from_str(&contents)
-        .map_err(|e| Error::new(
-            ErrorKind::Other,
-            format!("failed to deserialize module config: {}", e),
-        ))?;
 
     config_path.pop();
 
-    Ok((config_path, module))
+    Ok((config_path, json5::from_str(&contents)?))
 }
 
 #[derive(Deserialize, Debug)]

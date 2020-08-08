@@ -5,6 +5,7 @@ use std::process::exit;
 use clap::derive::Clap;
 
 mod opts;
+mod result;
 mod config;
 mod ioutils;
 mod actions;
@@ -52,7 +53,19 @@ async fn main() {
             path.pop();
 
             let provisioner = Provisioner::new(opts.skip_downloads);
-            provisioner.run(path, &config).await;
+
+            println!(">> provisioning");
+
+            match provisioner.run(&path, &config, None).await {
+                Ok(_) => {
+                    log::debug!("task finished succesfully");
+                    println!(">> finished");
+                },
+                Err(e) => {
+                    log::debug!("task errored: {}", e);
+                    println!("provisioning failed:\n  {}", e);
+                },
+            }
         },
     }
 }
