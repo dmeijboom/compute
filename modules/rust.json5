@@ -1,0 +1,42 @@
+{
+  module: {
+    name: 'rust',
+    vars: {
+      version: {
+        required: true,
+        type: 'float'
+      },
+      components: {
+        required: false,
+        type: 'array'
+      }
+    }
+  },
+  config: {
+    scripts: [
+      {
+        privileged: true,
+        name: 'install rustup {{vars.version}}',
+        test: 'test -L /usr/local/bin/rustup',
+        cmd: 'curl -LO https://static.rust-lang.org/rustup/dist/x86_64-unknown-linux-gnu/rustup-init && \
+chmod +x rustup-init && \
+export CARGO_HOME="{{env.HOME}}/.cargo" && \
+./rustup-init -y --no-modify-path --default-toolchain {{vars.version}} && \
+rm rustup-init && \
+ln -s "{{env.HOME}}/.cargo/bin/rustup" /usr/local/bin/rustup'
+      },
+      {% if vars.components %}
+      {% for component in vars.components %}
+      {
+        privileged: true,
+        name: 'install rust component: {{component}}',
+        test: 'test -L "/usr/local/bin/{{component}}"',
+        cmd: 'export CARGO_HOME="{{env.HOME}}/.cargo" && \
+rustup component add "{{component}}" && \
+ln -s "{{env.HOME}}/.cargo/bin/{{component}}" "/usr/local/bin/{{component}}"'
+      },
+      {% endfor %}
+      {% endif %}
+    ]
+  }
+}
