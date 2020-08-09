@@ -1,4 +1,4 @@
-# compute - Modular desktop provisioner
+# compute - Modular computer provisioning tool
 
 ## Documentation
 See the [wiki](https://github.com/dmeijboom/compute/wiki).
@@ -10,7 +10,7 @@ Since I'm a freelancer this is very neat because for each one of my clients I'm 
 At first I was using cloud-init to provision those vm's but that didn't work for me as for example I encountered a situation where I wanted to do something that depends on another module but that module was initialized after the other module so that didn't work..
 
 After a while I stopped using it and provisioned them manually but that required too much time.
-That's when I decided to create this project which is a simple, modular desktop provisioning tool.
+That's when I decided to create this project, a simple but modular computer provisioning tool.
 Is it better than cloud-init? Definitely lot.. But it's way easier to use and covers my use-case.
 
 ## Features
