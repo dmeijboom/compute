@@ -1,8 +1,8 @@
-use std::path::Path;
 use std::marker::Unpin;
+use std::path::{Path, PathBuf};
 
 use crc32fast::Hasher;
-use tokio::fs::{File, OpenOptions};
+use tokio::fs::{self, File, OpenOptions};
 use tera::{Tera, Context, Map, Value};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
@@ -32,6 +32,14 @@ where P: AsRef<Path>, S: AsRef<[u8]> + Unpin {
     }
 
     println!("updating file: {}", filename.as_ref().to_string_lossy());
+
+    let mut dir_name = PathBuf::from(filename.as_ref());
+    dir_name.pop();
+
+    if !dir_name.exists() {
+        fs::create_dir_all(dir_name).await?;
+    }
+
     let mut file = OpenOptions::new()
         .write(true)
         .create(true)
