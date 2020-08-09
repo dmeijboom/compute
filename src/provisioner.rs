@@ -47,9 +47,10 @@ impl Provisioner {
 
                     log::info!("reading local template file: {:?}", src);
 
-                    let contents = tokio::fs::read(src).await?;
+                    let contents = tokio::fs::read(&src).await?;
 
                     actions::write_template(
+                        &template,
                         &file.path,
                         str::from_utf8(&contents)?,
                         file.context.clone(),

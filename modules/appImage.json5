@@ -1,0 +1,25 @@
+{
+  module: {
+    name: 'appImage',
+    vars: {
+      apps: {
+        required: true,
+        type: 'array'
+      }
+    }
+  },
+  config: {
+    scripts: [
+      {% for app in vars.apps %}
+      {
+        name: 'install AppImage {{app.name}}',
+        privileged: true,
+        test: 'test -f /usr/local/bin/{{app.name}}',
+        cmd: "curl -L '{{app.url}}' -o /tmp/{{app.name}}.appimage && \
+chmod +x /tmp/{{app.name}}.appimage && \
+mv /tmp/{{app.name}}.appimage /usr/local/bin/{{app.name}}"
+      },
+      {% endfor %}
+    ]
+  }
+}

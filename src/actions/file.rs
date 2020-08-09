@@ -51,13 +51,13 @@ where P: AsRef<Path>, S: AsRef<[u8]> + Unpin {
     Ok(true)
 }
 
-pub async fn write_template<P, S>(filename: P, source: S, ctx: Map<String, Value>) -> Result<bool>
+pub async fn write_template<P, S>(template_name: &str, filename: P, source: S, ctx: Map<String, Value>) -> Result<bool>
 where P: AsRef<Path>, S: AsRef<str> {
     let contents = Tera::one_off(
         source.as_ref(),
         &Context::from_value(Value::Object(ctx))?,
         false,
-    ).map_err(|e| Error::from_template_err(filename.as_ref().display(), e))?;
+    ).map_err(|e| Error::from_template_err(template_name, e))?;
 
     write_file(filename, contents.as_bytes()).await
 }

@@ -27,6 +27,7 @@
         template: 'templates/networking/hosts',
         context: {
           hosts: {{vars.hosts | json_encode()}},
+          hostname: {{vars.hostname | json_encode()}}
         }
       }
       {% endif %}
