@@ -50,9 +50,9 @@ impl fmt::Display for Error {
                 tera::ErrorKind::FunctionNotFound(msg) => write!(f, "failed to compile template: function {} does not exist", msg),
                 tera::ErrorKind::InvalidMacroDefinition(name) => write!(f, "failed to compile template: invalid macro {}", name),
                 tera::ErrorKind::Json(e) => write!(f, "failed to compile template: {}", e),
-                tera::ErrorKind::CallFunction(msg) => write!(f, "failed to compile template: {}", msg),
-                tera::ErrorKind::CallFilter(msg) => write!(f, "failed to compile template: {}", msg),
-                tera::ErrorKind::CallTest(msg) => write!(f, "failed to compile template: {}", msg),
+                tera::ErrorKind::CallFunction(name) => write!(f, "failed to compile template: error while calling {}()", name),
+                tera::ErrorKind::CallFilter(name) => write!(f, "failed to compile template: error while calling filter {}", name),
+                tera::ErrorKind::CallTest(name) => write!(f, "failed to compile template: error while calling test {}", name),
                 _ => panic!("invalid tera error"),
             },
             Self::Json5Error(e) => match e {

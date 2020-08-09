@@ -1,9 +1,15 @@
 {
   module: {
-    name: "networking",
+    name: 'networking',
     vars: {
-      hostname: "string",
-      hosts: "array"
+      hostname: {
+        required: true,
+        type: 'string',
+      },
+      hosts: {
+        required: false,
+        type: 'array'
+      }
     }
   },
   config: {
@@ -15,6 +21,7 @@
           hostname: {{vars.hostname | json_encode()}},
         }
       },
+      {% if vars.hosts %}
       {
         path: '/etc/hosts',
         template: 'templates/networking/hosts',
@@ -22,6 +29,7 @@
           hosts: {{vars.hosts | json_encode()}},
         }
       }
+      {% endif %}
     ]
   }
 }
