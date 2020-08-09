@@ -10,11 +10,17 @@
     files: [
       {
         path: '/etc/hostname',
-        template: 'templates/networking/hostname'
+        template: 'templates/networking/hostname',
+        context: {
+          hostname: {{vars.hostname | json_encode()}},
+        }
       },
       {
         path: '/etc/hosts',
-        template: 'templates/networking/hosts'
+        template: 'templates/networking/hosts',
+        context: {
+          hosts: {{vars.hosts | json_encode()}},
+        }
       }
     ]
   }

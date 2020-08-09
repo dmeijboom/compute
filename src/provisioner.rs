@@ -1,7 +1,6 @@
 use std::str;
 use std::path::{PathBuf, Path};
 
-use tera::{Map, Value};
 use async_recursion::async_recursion;
 
 use super::actions;
@@ -39,7 +38,7 @@ impl Provisioner {
         Ok(())
     }
 
-    async fn configure_files(&self, root_dir: &Path, config: &Config, vars: Option<Map<String, Value>>) -> Result<()> {
+    async fn configure_files(&self, root_dir: &Path, config: &Config) -> Result<()> {
         for file in &config.files {
             let updated = match file.source() {
                 TemplateSource::Local(template) => {
@@ -53,15 +52,7 @@ impl Provisioner {
                     actions::write_template(
                         &file.path,
                         str::from_utf8(&contents)?,
-                        match &vars {
-                            None => file.context.clone(),
-                            Some(vars) => {
-                                let mut ctx = file.context.clone();
-
-                                ctx.insert("vars".to_string(), Value::Object(vars.clone()));
-                                ctx
-                            },
-                        },
+                        file.context.clone(),
                     ).await?
                 },
                 TemplateSource::S3(s3file) => {
@@ -109,24 +100,19 @@ impl Provisioner {
         for (name, config) in &config.modules {
             log::info!("loading module: {}", name);
 
-            let (module_root, module) = load_module(name).await?;
+            let (module_root, module) = load_module(name, config.clone()).await?;
 
-            if let Value::Object(vars) = config {
-                self.run(
-                    &module_root,
-                    &module.config,
-                    Some(vars.clone()),
-                ).await?;
-            } else {
-                println!("skipping module because of invalid type for vars: {}", name);
-            }
+            self.run(
+                &module_root,
+                &module.config,
+            ).await?;
         }
 
         Ok(())
     }
 
     #[async_recursion]
-    pub async fn run(&self, root_dir: &Path, config: &Config, vars: Option<Map<String, Value>>) -> Result<()> {
+    pub async fn run(&self, root_dir: &Path, config: &Config) -> Result<()> {
         println!("configuring modules");
         self.configure_modules(root_dir, config).await?;
 
@@ -137,7 +123,7 @@ impl Provisioner {
         self.configure_scripts(root_dir, config).await?;
 
         println!("configuring files");
-        self.configure_files(root_dir, config, vars).await?;
+        self.configure_files(root_dir, config).await?;
 
         Ok(())
     }

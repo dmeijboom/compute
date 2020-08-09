@@ -56,7 +56,7 @@ async fn main() {
 
             println!(">> provisioning");
 
-            match provisioner.run(&path, &config, None).await {
+            match provisioner.run(&path, &config).await {
                 Ok(_) => {
                     log::debug!("task finished succesfully");
                     println!(">> finished");
