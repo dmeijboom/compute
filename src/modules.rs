@@ -27,7 +27,7 @@ pub async fn load_module(name: &str, vars: Value) -> Result<(PathBuf, Module)> {
         &contents,
         &context,
         false,
-    )?;
+    ).map_err(|e| Error::from_template_err(format!("{}.json5", name), e))?;
 
     config_path.pop();
 

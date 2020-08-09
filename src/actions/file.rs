@@ -6,7 +6,7 @@ use tokio::fs::{File, OpenOptions};
 use tera::{Tera, Context, Map, Value};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
-use crate::result::Result;
+use crate::result::{Error, Result};
 
 fn checksum(buf: &[u8]) -> u32 {
     let mut hasher = Hasher::new();
@@ -57,7 +57,7 @@ where P: AsRef<Path>, S: AsRef<str> {
         source.as_ref(),
         &Context::from_value(Value::Object(ctx))?,
         false,
-    )?;
+    ).map_err(|e| Error::from_template_err(filename.as_ref().display(), e))?;
 
     write_file(filename, contents.as_bytes()).await
 }

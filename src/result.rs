@@ -17,9 +17,16 @@ pub enum Error {
     Utf8Error(Utf8Error),
     TokioError(JoinError),
     TeraError(tera::Error),
+    TeraTemplateError((String, tera::Error)),
     Json5Error(json5::Error),
     ReqwestError(reqwest::Error),
     RusotoError(RusotoError<GetObjectError>),
+}
+
+impl Error {
+    pub fn from_template_err<T: ToString>(template_name: T, err: tera::Error) -> Self {
+        Error::TeraTemplateError((template_name.to_string(), err))
+    }
 }
 
 impl error::Error for Error {}
@@ -40,19 +47,20 @@ impl fmt::Display for Error {
             } else {
                 write!(f, "failed to complete task: {}", e)
             },
-            Self::TeraError(e) => match &e.kind {
-                tera::ErrorKind::Msg(msg) => write!(f, "failed to compile template: {}", msg),
-                tera::ErrorKind::CircularExtend { .. } => write!(f, "failed to compile template: circular extend"),
-                tera::ErrorKind::MissingParent { .. } => write!(f, "failed to compile template: missing parenthesis"),
-                tera::ErrorKind::TemplateNotFound(name) => write!(f, "failed to compile template: template {} does not exist", name),
-                tera::ErrorKind::FilterNotFound(name) => write!(f, "failed to compile template: filter {} does not exist", name),
-                tera::ErrorKind::TestNotFound(name) => write!(f, "failed to compile template: test {} does not exist", name),
-                tera::ErrorKind::FunctionNotFound(msg) => write!(f, "failed to compile template: function {} does not exist", msg),
-                tera::ErrorKind::InvalidMacroDefinition(name) => write!(f, "failed to compile template: invalid macro {}", name),
-                tera::ErrorKind::Json(e) => write!(f, "failed to compile template: {}", e),
-                tera::ErrorKind::CallFunction(name) => write!(f, "failed to compile template: error while calling {}()", name),
-                tera::ErrorKind::CallFilter(name) => write!(f, "failed to compile template: error while calling filter {}", name),
-                tera::ErrorKind::CallTest(name) => write!(f, "failed to compile template: error while calling test {}", name),
+            Self::TeraError(e) => write!(f, "tera error: {}", e),
+            Self::TeraTemplateError((template_name, e)) => match &e.kind {
+                tera::ErrorKind::Msg(msg) => write!(f, "failed to compile template: {}", msg.replace("__tera_one_off", template_name)),
+                tera::ErrorKind::CircularExtend { .. } => write!(f, "failed to compile template {}: circular extend", template_name),
+                tera::ErrorKind::MissingParent { .. } => write!(f, "failed to compile template {}: missing parenthesis", template_name),
+                tera::ErrorKind::TemplateNotFound(name) => write!(f, "failed to compile template {}: unable to find template {}", template_name, name),
+                tera::ErrorKind::FilterNotFound(name) => write!(f, "failed to compile template {}: filter {} does not exist", template_name, name),
+                tera::ErrorKind::TestNotFound(name) => write!(f, "failed to compile template {}: test {} does not exist", template_name, name),
+                tera::ErrorKind::FunctionNotFound(msg) => write!(f, "failed to compile template {}: function {} does not exist", template_name, msg),
+                tera::ErrorKind::InvalidMacroDefinition(name) => write!(f, "failed to compile template {}: invalid macro {}", template_name, name),
+                tera::ErrorKind::Json(e) => write!(f, "failed to compile template {}: {}", template_name, e),
+                tera::ErrorKind::CallFunction(name) => write!(f, "failed to compile template {}: error while calling {}()", template_name, name),
+                tera::ErrorKind::CallFilter(name) => write!(f, "failed to compile template {}: error while calling filter {}", template_name, name),
+                tera::ErrorKind::CallTest(name) => write!(f, "failed to compile template {}: error while calling test {}", template_name, name),
                 _ => panic!("invalid tera error"),
             },
             Self::Json5Error(e) => match e {
@@ -70,12 +78,6 @@ impl fmt::Display for Error {
 impl From<io::Error> for Error {
     fn from(err: io::Error) -> Self {
         Error::IOError(err)
-    }
-}
-
-impl From<tera::Error> for Error {
-    fn from(err: tera::Error) -> Self {
-        Error::TeraError(err)
     }
 }
 
@@ -106,5 +108,11 @@ impl From<Utf8Error> for Error {
 impl From<JoinError> for Error {
     fn from(err: JoinError) -> Self {
         Error::TokioError(err)
+    }
+}
+
+impl From<tera::Error> for Error {
+    fn from(err: tera::Error) -> Self {
+        Error::TeraError(err)
     }
 }
