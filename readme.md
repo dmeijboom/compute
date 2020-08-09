@@ -1,6 +1,9 @@
-## compute - Modular desktop provisioner
+# compute - Modular desktop provisioner
 
-### Introduction
+## Documentation
+See the [wiki](https://github.com/dmeijboom/compute/wiki).
+
+## Introduction
 For a while now I'm using [multipass](https://github.com/canonical/multipass) to manage multiple vm's on my Linux laptop.
 Since I'm a freelancer this is very neat because for each one of my clients I'm running a different vm (because I need different tools).
 
@@ -10,7 +13,7 @@ After a while I stopped using it and provisioned them manually but that required
 That's when I decided to create this project which is a simple, modular desktop provisioning tool.
 Is it better than cloud-init? Definitely lot.. But it's way easier to use and covers my use-case.
 
-### Features
+## Features
 Compute supports one or more config files which can use all of these core modules:
 
 - Modules (only builtin/core modules work, you can't write user-modules currently)
@@ -19,15 +22,14 @@ Compute supports one or more config files which can use all of these core module
 - Download S3 files (for SSH/GPG keys for example)
 - Templates
 
-### How does it work?
+## How does it work?
 When running `compute apply` it reads the configuration file and applies each change per module.
 If nothing changed (for example because a package was already installed) it won't do anything for that change.
 
-### Current stage
+## Current stage
 It mostly works but there are a lot of things which can be improved or are still not done:
 
 - Unittests (I should've done that already but yeah I'm lazy..)
-- Documentation (again, lazy..)
 - User modules
 - Atomic applies (currently if something fails you're system is basically in an unknown state)
 - Proper installation and update mechanism for the core modules
