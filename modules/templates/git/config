@@ -1,0 +1,19 @@
+[user]
+    email = {{email}}
+    name = {{name}}
+{% if gpg_key %}    signingkey = {{gpg_key}}{% endif %}
+{% if gpg_key %}
+[gpg]
+    program = gpg2
+[commit]
+    gpgsign = true
+{% endif %}
+{% if mergetool %}
+[merge]
+    tool = {{mergetool.name}}
+[mergetool "{{mergetool.name}}"]
+    cmd = {{mergetool.cmd}}
+    trustExitCode = true
+[mergetool]
+    keepBackup = false
+{% endif %}

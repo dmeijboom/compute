@@ -100,6 +100,7 @@ impl Provisioner {
     pub async fn configure_modules(&self, _root_dir: &Path, config: &Config) -> Result<()> {
         for (name, config) in &config.modules {
             log::info!("loading module: {}", name);
+            println!(">>> configuring module {}", name);
 
             let (module_root, module) = load_module(name, config.clone()).await?;
 
@@ -114,16 +115,15 @@ impl Provisioner {
 
     #[async_recursion]
     pub async fn run(&self, root_dir: &Path, config: &Config) -> Result<()> {
-        println!("configuring modules");
         self.configure_modules(root_dir, config).await?;
 
-        println!("configuring apt");
+        println!(">>> configuring apt");
         self.configure_apt(root_dir, config).await?;
 
-        println!("configuring scripts");
+        println!(">>> configuring scripts");
         self.configure_scripts(root_dir, config).await?;
 
-        println!("configuring files");
+        println!(">>> configuring files");
         self.configure_files(root_dir, config).await?;
 
         Ok(())

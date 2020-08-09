@@ -1,0 +1,41 @@
+{
+  module: {
+    name: 'git',
+    vars: {
+      name: {
+        required: true,
+        type: 'string'
+      },
+      email: {
+        required: true,
+        type: 'string'
+      },
+      gpg_key: {
+        required: false,
+        type: 'string'
+      },
+      mergetool: {
+        required: false,
+        type: 'object',
+      }
+    }
+  },
+  config: {
+    apt: {
+      packages: [
+        'git',
+        {% if vars.gpg_key %}
+        'gnupg2',
+        {% endif %}
+      ]
+    },
+    files: [
+      {
+        owner: [{{uid}}, {{gid}}],
+        path: '{{env.HOME}}/.gitconfig',
+        template: 'templates/git/config',
+        context: {{vars | json_encode()}}
+      }
+    ]
+  }
+}

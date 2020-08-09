@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 use tokio::fs;
 use serde::Deserialize;
-use tera::{Tera, Context, Value};
+use tera::{Tera, Map, Context, Value};
 
 use super::config::Config;
 use super::result::{Result, Error};
@@ -21,8 +21,18 @@ pub async fn load_module(name: &str, vars: Value) -> Result<(PathBuf, Module)> {
         return Err(Error::Custom(format!("failed to load module {}", name)));
     }
 
+    let mut env_vars = Map::new();
+
+    for (key, val) in env::vars() {
+        env_vars.insert(key, Value::String(val));
+    }
+
     let mut context = Context::new();
+
     context.insert("vars", &vars);
+    context.insert("env", &Value::Object(env_vars));
+    context.insert("uid", &env::var("SUDO_UID").unwrap().parse::<i32>().unwrap());
+    context.insert("gid", &env::var("SUDO_GID").unwrap().parse::<i32>().unwrap());
 
     let contents = fs::read_to_string(&config_path).await?;
     let contents = Tera::one_off(

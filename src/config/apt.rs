@@ -19,5 +19,6 @@ pub struct AptRepository {
 #[serde(rename_all = "camelCase")]
 pub struct Config {
     pub packages: Vec<String>,
+    #[serde(default)]
     pub repositories: Vec<AptRepository>,
 }

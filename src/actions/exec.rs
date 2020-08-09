@@ -39,10 +39,6 @@ pub async fn run_cmd(opts: CmdOpts<'_>) -> Result<()> {
                 .parse()
                 .unwrap(),
         })
-        .env("HOME", match opts.privileged {
-            true => env::var("HOME").unwrap(),
-            false => format!("/home/{}", env::var("SUDO_USER").unwrap()),
-        })
         .args(opts.args)
         .stdin(Stdio::null())
         .stdout(match opts.inherit_output {
