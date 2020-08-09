@@ -1,0 +1,35 @@
+{
+  module: {
+    name: 'golang',
+    vars: {
+      version: {
+        required: true,
+        type: 'float'
+      },
+      packages: {
+        required: false,
+        type: 'array'
+      }
+    }
+  },
+  config: {
+    scripts: [
+      {
+        privileged: true,
+        name: 'install golang {{vars.version}}',
+        test: 'test -L /usr/local/bin/go',
+        cmd: 'curl -L https://dl.google.com/go/go{{vars.version}}.linux-amd64.tar.gz | tar -xz -C /usr/local && \
+ln -s /usr/local/go/bin/go /usr/local/bin/go'
+      },
+      {% if vars.packages %}
+      {% for package in vars.packages %}
+      {
+        name: 'install golang package: {{package.name}}',
+        test: 'test -f "$(go env GOPATH)/bin/{{package.name}}"',
+        cmd: 'GO111MODULE=on go get "{{package.url}}"'
+      },
+      {% endfor %}
+      {% endif %}
+    ]
+  }
+}
