@@ -13,7 +13,7 @@ Is it better than cloud-init? Definitely lot.. But it's way easier to use and co
 ### Features
 Compute supports one or more config files which can use all of these core modules:
 
-- Modules (only builtin modules work, you can't write user-modules currently)
+- Modules (only builtin/core modules work, you can't write user-modules currently)
 - Install apt packages
 - Configure apt repositories
 - Download S3 files (for SSH/GPG keys for example)
@@ -30,7 +30,7 @@ It mostly works but there are a lot of things which can be improved or are still
 - Documentation (again, lazy..)
 - User modules
 - Atomic applies (currently if something fails you're system is basically in an unknown state)
-- Proper installation and update mechanism for the builtin modules
+- Proper installation and update mechanism for the core modules
 - Bugs (configuring an apt repository doesn't work in almost all cases)
 - Other commands such as:
     - edit; Edit templates on-the-fly
